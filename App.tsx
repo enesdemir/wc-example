@@ -4,6 +4,9 @@
  *
  * @format
  */
+import "@walletconnect/react-native-compat";
+
+import "text-encoding-polyfill";
 
 import React, { useEffect, useState } from "react";
 import type { PropsWithChildren } from "react";
@@ -35,7 +38,6 @@ type SectionProps = PropsWithChildren<{
   title: string;
 }>;
 
-let web3wallet: any;
 
 function Section({ children, title }: SectionProps): JSX.Element {
   const isDarkMode = useColorScheme() === "dark";
@@ -64,6 +66,8 @@ function Section({ children, title }: SectionProps): JSX.Element {
 }
 
 function App(): JSX.Element {
+
+  let [web3wallet, setweb3wallet] = useState<any>();
   const [camera, setCamera] = useState<boolean>(false);
   const isDarkMode = useColorScheme() === "dark";
   useEffect(() => {
@@ -83,6 +87,7 @@ function App(): JSX.Element {
             console.log("The permission is limited: some actions are possible");
             break;
           case RESULTS.GRANTED:
+            setCamera(true);
             console.log("The permission is granted");
             break;
           case RESULTS.BLOCKED:
@@ -93,6 +98,7 @@ function App(): JSX.Element {
       .catch((error) => {
         // …
       });
+    asyncFunc();
 
   }, []);
 
@@ -112,7 +118,11 @@ function App(): JSX.Element {
         icons: ["https://avatars.githubusercontent.com/u/37784886"]
       }
     });
+    console.log(web3wallet);
+    setweb3wallet(web3wallet);
     web3wallet.on("session_proposal", async (proposal) => {
+      console.log("test --------- test")
+
       console.log(proposal);
       /*const session = await web3wallet.approveSession({
         id: proposal.id,
@@ -124,7 +134,7 @@ function App(): JSX.Element {
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter
   };
-
+  console.log(web3wallet);
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
@@ -143,11 +153,12 @@ function App(): JSX.Element {
         // Show/hide scan frame
         scanBarcode={true}
         hideControls={true}
+        allowCaptureRetake={false}
         // Scanner Frame color
         onReadCode={event => {
-          console.log(event.nativeEvent.codeStringValue);
-
-          web3wallet.core.pairing.pair({ uri: event.nativeEvent.codeStringValue });
+          //console.log(event.nativeEvent.codeStringValue);
+          //console.log(web3wallet);
+          web3wallet.pair({ uri: event.nativeEvent.codeStringValue });
         }}
       /></View>}
     </SafeAreaView>
