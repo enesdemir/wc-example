@@ -5,6 +5,7 @@
  * @format
  */
 import "@walletconnect/react-native-compat";
+import { buildApprovedNamespaces, getSdkError } from "@walletconnect/utils";
 
 import "text-encoding-polyfill";
 
@@ -120,14 +121,48 @@ function App(): JSX.Element {
     });
     console.log(web3wallet);
     setweb3wallet(web3wallet);
-    web3wallet.on("session_proposal", async (proposal) => {
-      console.log("test --------- test")
+    web3wallet.on("session_proposal", async (proposal: any) => {
+      console.log("test --------- test");
 
-      console.log(proposal);
+      console.log(JSON.stringify(proposal));
       /*const session = await web3wallet.approveSession({
         id: proposal.id,
         namespaces,
       });*/
+      try {
+        // ------- namespaces builder util ------------ //
+        const approvedNamespaces = buildApprovedNamespaces({
+          proposal: proposal.params,
+          supportedNamespaces: {
+            eip155: {
+              chains: ["eip155:1"],
+              methods: ["eth_sendTransaction", "personal_sign"],
+              events: ["accountsChanged", "chainChanged"],
+              accounts: [
+                "eip155:1:0xfc93CbDe444a9D48B0C6183bdd5841f02e3fBddD"
+              ]
+            }
+          }
+        });
+        // ------- end namespaces builder util ------------ //
+
+        const session = await web3wallet.approveSession({
+          id: proposal.id,
+          namespaces: approvedNamespaces
+        });
+
+        console.log("session")
+        console.log(JSON.stringify(session))
+        console.log("session")
+      } catch (error) {
+        // use the error.message to show toast/info-box letting the user know that the connection attempt was unsuccessful
+
+
+        await web3wallet.rejectSession({
+          id: proposal.id,
+          reason: getSdkError("USER_REJECTED")
+        });
+      }
     });
   };
 
